@@ -3,14 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>smokinpurp4's search engine</title>
+    <title>SMOKIN PURP – Search</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 1rem;
-            background: #000;
+            /* Default fallback colour */
             color: #fff;
+            /* The background image will be replaced at runtime based on the current
+               weather. Provide a generic dark fallback in case the script fails. */
+            background-color: #000;
+            background-size: cover;
+            background-position: center;
         }
         h1 {
             text-align: center;
@@ -77,12 +82,81 @@
     </style>
 </head>
 <body>
-    <h1>smokinpurp4's search engine</h1>
+    <!-- Updated branding: change heading to SMOKIN PURP as requested -->
+    <h1>SMOKIN PURP</h1>
+    <div id="weather-settings" style="text-align:center;margin-bottom:1rem;">
+        <label style="font-size:0.9rem;">Update background (lat, lon): 
+            <input id="lat" type="number" step="0.1" placeholder="Lat" style="width:5rem;background:#111;color:#fff;border:1px solid #444;border-radius:4px;"/>
+            <input id="lon" type="number" step="0.1" placeholder="Lon" style="width:5rem;background:#111;color:#fff;border:1px solid #444;border-radius:4px;"/>
+            <button type="button" onclick="updateLocation()" style="padding:0.3rem 0.5rem;font-size:0.8rem;background:#222;color:#fff;border:1px solid #444;border-radius:4px;cursor:pointer;">Update</button>
+        </label>
+    </div>
     <form id="search-container" action="https://yewtu.be/search" method="GET" target="_blank">
         <input type="text" name="q" placeholder="Search for videos" />
         <button type="submit">Search</button>
     </form>
     <p style="text-align:center;margin-top:1rem;">Or explore <a href="https://yewtu.be/feed/trending" target="_blank" rel="noopener" style="color:#61dafb;">Trending videos</a></p>
     <div class="footer">Powered by smokinpurp4 – open‑source YouTube front‑end</div>
+
+    <script>
+    // Map Open‑Meteo weather codes to our custom background images
+    const weatherImages = {
+        sunny: 'sunny.png',
+        cloudy: 'cloudy.png',
+        rainy: 'rainy.png',
+        snowy: 'snowy.png'
+    };
+    function setBackground(code) {
+        // Determine which image to use based on the weather code
+        let key;
+        if (code === 0) {
+            key = 'sunny';
+        } else if (code >= 1 && code <= 3) {
+            key = 'cloudy';
+        } else if ((code >= 45 && code <= 48) || (code >= 51 && code <= 67) || (code >= 80 && code <= 82) || code >= 95) {
+            key = 'rainy';
+        } else if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
+            key = 'snowy';
+        } else {
+            key = 'cloudy';
+        }
+        document.body.style.backgroundImage = `url('${weatherImages[key]}')`;
+    }
+    function fetchWeather(lat, lon) {
+        // Fetch current weather from Open‑Meteo API
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                const code = data.current_weather ? data.current_weather.weathercode : 0;
+                setBackground(code);
+            })
+            .catch(() => {
+                // Fallback to sunny background on error
+                setBackground(0);
+            });
+    }
+    function updateLocation() {
+        const lat = parseFloat(document.getElementById('lat').value);
+        const lon = parseFloat(document.getElementById('lon').value);
+        if (!isNaN(lat) && !isNaN(lon)) {
+            fetchWeather(lat, lon);
+        }
+    }
+    function initWeather() {
+        // Try to use the browser's geolocation to determine the user's location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(pos => {
+                fetchWeather(pos.coords.latitude, pos.coords.longitude);
+            }, () => {
+                // Fallback to Detroit, MI coordinates if geolocation fails
+                fetchWeather(42.3314, -83.0458);
+            });
+        } else {
+            fetchWeather(42.3314, -83.0458);
+        }
+    }
+    document.addEventListener('DOMContentLoaded', initWeather);
+    </script>
 </body>
 </html>
