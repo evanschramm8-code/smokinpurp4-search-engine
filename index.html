@@ -139,14 +139,21 @@
         <button type="submit" style="padding:0.5rem 1rem;background:#222;color:#fff;border:1px solid #444;border-radius:4px;cursor:pointer;">Search</button>
         <button type="button" onclick="saveSearch()" style="padding:0.5rem 1rem;background:#333;color:#fff;border:1px solid #444;border-radius:4px;cursor:pointer;">Save Search</button>
     </form>
-    <p style="text-align:center;margin-top:1rem;">Or explore <a href="https://yewtu.be/feed/trending" target="_blank" rel="noopener" style="color:#61dafb;">Trending videos</a></p>
+    <!-- Trending link removed: we'll load trending videos directly below using the Invidious API -->
+    <p id="trending-loading" style="text-align:center;margin-top:1rem;color:#888;">Loading trending videos...</p>
 
     <!-- Containers for saved searches and favourite videos -->
     <div id="saved-searches" style="margin-top:2rem;"></div>
     <div id="favorites" style="margin-top:2rem;"></div>
+    <!-- Container where trending videos will be rendered -->
+    <div id="trending" style="margin-top:2rem;"></div>
     <div class="footer">Powered by smokinpurp4 – open‑source YouTube front‑end</div>
 
     <script>
+    // Simple rate limit trackers for search and trending calls
+    let lastSearchTime = 0;
+    let lastTrendingTime = 0;
+
     // Map Open‑Meteo weather codes to our custom background images
     const weatherImages = {
         sunny: 'sunny.png',
@@ -271,6 +278,45 @@
         loadSaved();
     }
 
+    // Fetch trending videos via the Invidious API and render them into the #trending element
+    function fetchTrending() {
+        const now = Date.now();
+        // Rate limit: allow one trending fetch every 30 seconds
+        if (now - lastTrendingTime < 30000) return;
+        lastTrendingTime = now;
+        const loadingEl = document.getElementById('trending-loading');
+        if (loadingEl) loadingEl.textContent = 'Loading trending videos...';
+        fetch('https://yewtu.be/api/v1/trending?region=US')
+            .then(res => res.json())
+            .then(data => {
+                const container = document.getElementById('trending');
+                if (!container) return;
+                // Build HTML for trending videos
+                let html = '<h2 style="margin-bottom:0.5rem;">Trending Videos</h2><div style="display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;">';
+                data.slice(0, 8).forEach(item => {
+                    const thumb = item.videoThumbnails && item.videoThumbnails.length ? item.videoThumbnails[item.videoThumbnails.length-1].url : '';
+                    const title = (item.title || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += `<div style="width:300px;background:#fff;border:1px solid #ddd;border-radius:4px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+                                <a href="watch.html?videoId=${item.videoId}" style="text-decoration:none;color:#000;">
+                                    <img src="${thumb}" alt="${title}" style="width:100%;height:auto;">
+                                    <div style="padding:0.5rem;">
+                                        <h3 style="margin:0;font-size:1.1rem;">${title}</h3>
+                                        <p style="margin:0.25rem 0 0;font-size:0.9rem;color:#555;">${item.author}</p>
+                                    </div>
+                                </a>
+                            </div>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+                if (loadingEl) loadingEl.remove();
+            })
+            .catch(() => {
+                const container = document.getElementById('trending');
+                if (container) container.innerHTML = '<p style="color:#888;">Failed to load trending videos.</p>';
+                if (loadingEl) loadingEl.remove();
+            });
+    }
+
     function removeSearch(index) {
         let searches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
         searches.splice(index, 1);
@@ -287,6 +333,9 @@
 
     // Initialize saved lists on page load
     document.addEventListener('DOMContentLoaded', loadSaved);
+
+    // Fetch trending videos on page load
+    document.addEventListener('DOMContentLoaded', fetchTrending);
     </script>
 </body>
 </html>
