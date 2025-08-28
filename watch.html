@@ -18,6 +18,7 @@
             padding: 1rem;
             background: #111;
             display: flex;
+            justify-content: space-between;
             align-items: center;
         }
         .header a {
@@ -25,6 +26,34 @@
             text-decoration: none;
             margin-right: 1rem;
             font-size: 1rem;
+        }
+        #fav-btn {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+        .youtube-link .yt-icon {
+            width: 24px;
+            height: 18px;
+            background: #FF0000;
+            border-radius: 4px;
+            position: relative;
+            display: inline-block;
+        }
+        .youtube-link .yt-icon::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 8px;
+            width: 0;
+            height: 0;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 10px solid #fff;
         }
         .container {
             display: flex;
@@ -41,8 +70,14 @@
 </head>
 <body>
     <div class="header">
-        <a href="index.html" style="color:#61dafb;text-decoration:none;">← Back to Search</a>
-        <span id="video-title" style="margin-left:1rem;font-weight:bold;"></span>
+        <div>
+            <a href="index.html" style="color:#61dafb;text-decoration:none;">← Back to Search</a>
+            <span id="video-title" style="margin-left:1rem;font-weight:bold;"></span>
+        </div>
+        <div class="header-actions" style="display:flex;align-items:center;">
+            <button id="fav-btn" onclick="addToFavorites()">☆ Add to Favorites</button>
+            <a href="https://www.youtube.com" target="_blank" class="youtube-link" aria-label="YouTube"><div class="yt-icon"></div></a>
+        </div>
     </div>
     <div class="container">
         <iframe id="player" allowfullscreen></iframe>
@@ -63,6 +98,20 @@
                 document.getElementById('video-title').textContent = 'Invalid video';
                 return;
             }
+
+        // Add current video to favourites stored in localStorage
+        function addToFavorites() {
+            const videoId = getQueryParam('videoId');
+            if (!videoId) return;
+            const titleText = document.getElementById('video-title').textContent || videoId;
+            let favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+            // Avoid duplicates
+            if (!favs.some(f => f.id === videoId)) {
+                favs.push({ id: videoId, title: titleText });
+                localStorage.setItem('favorites', JSON.stringify(favs));
+            }
+            alert('Added to favorites');
+        }
             // Set iframe source to Invidious embed
             const player = document.getElementById('player');
             player.src = `https://yewtu.be/embed/${videoId}?autoplay=1`;

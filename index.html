@@ -79,11 +79,50 @@
             font-size: 0.8rem;
             color: #777;
         }
+
+        /* Top navigation bar styles */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: #111;
+            color: #fff;
+        }
+        .top-bar .title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .youtube-link .yt-icon {
+            width: 24px;
+            height: 18px;
+            background: #FF0000;
+            border-radius: 4px;
+            position: relative;
+            display: inline-block;
+        }
+        .youtube-link .yt-icon::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 8px;
+            width: 0;
+            height: 0;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 10px solid #fff;
+        }
     </style>
 </head>
 <body>
-    <!-- Updated branding: change heading to SMOKIN PURP as requested -->
-    <h1>SMOKIN PURP</h1>
+    <!-- Top navigation bar with site title and YouTube shortcut -->
+    <header class="top-bar">
+        <div class="title">SMOKIN PURP</div>
+        <a href="https://www.youtube.com" target="_blank" class="youtube-link" aria-label="YouTube">
+            <div class="yt-icon"></div>
+        </a>
+    </header>
     <div id="weather-settings" style="text-align:center;margin-bottom:1rem;">
         <label style="font-size:0.9rem;">Update background (lat, lon): 
             <input id="lat" type="number" step="0.1" placeholder="Lat" style="width:5rem;background:#111;color:#fff;border:1px solid #444;border-radius:4px;"/>
@@ -91,11 +130,17 @@
             <button type="button" onclick="updateLocation()" style="padding:0.3rem 0.5rem;font-size:0.8rem;background:#222;color:#fff;border:1px solid #444;border-radius:4px;cursor:pointer;">Update</button>
         </label>
     </div>
-    <form id="search-container" action="https://yewtu.be/search" method="GET" target="_blank">
-        <input type="text" name="q" placeholder="Search for videos" />
-        <button type="submit">Search</button>
+    <!-- Search form with Save Search button -->
+    <form id="search-container" action="https://yewtu.be/search" method="GET" target="_blank" style="display:flex;justify-content:center;gap:0.5rem;margin-top:1rem;">
+        <input id="search-input" type="text" name="q" placeholder="Search for videos" style="flex:1;padding:0.5rem;border-radius:4px;border:1px solid #444;background:#111;color:#fff;" />
+        <button type="submit" style="padding:0.5rem 1rem;background:#222;color:#fff;border:1px solid #444;border-radius:4px;cursor:pointer;">Search</button>
+        <button type="button" onclick="saveSearch()" style="padding:0.5rem 1rem;background:#333;color:#fff;border:1px solid #444;border-radius:4px;cursor:pointer;">Save Search</button>
     </form>
     <p style="text-align:center;margin-top:1rem;">Or explore <a href="https://yewtu.be/feed/trending" target="_blank" rel="noopener" style="color:#61dafb;">Trending videos</a></p>
+
+    <!-- Containers for saved searches and favourite videos -->
+    <div id="saved-searches" style="margin-top:2rem;"></div>
+    <div id="favorites" style="margin-top:2rem;"></div>
     <div class="footer">Powered by smokinpurp4 – open‑source YouTube front‑end</div>
 
     <script>
@@ -157,6 +202,71 @@
         }
     }
     document.addEventListener('DOMContentLoaded', initWeather);
+
+    // Functions for saved searches and favourites
+    function loadSaved() {
+        const searches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+        const favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+        const savedContainer = document.getElementById('saved-searches');
+        const favContainer = document.getElementById('favorites');
+        // Render saved searches
+        if (savedContainer) {
+            if (searches.length) {
+                let html = '<h2 style="margin-bottom:0.5rem;">Saved Searches</h2><ul style="list-style:none;padding:0;">';
+                searches.forEach((q, idx) => {
+                    const safeQ = q.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += `<li style="margin:0.3rem 0;"><a href="https://yewtu.be/search?q=${encodeURIComponent(q)}" target="_blank" rel="noopener" style="color:#61dafb;">${safeQ}</a> <button onclick="removeSearch(${idx})" style="margin-left:0.5rem;background:#333;border:1px solid #444;color:#fff;border-radius:3px;padding:0 0.3rem;cursor:pointer;">×</button></li>`;
+                });
+                html += '</ul>';
+                savedContainer.innerHTML = html;
+            } else {
+                savedContainer.innerHTML = '';
+            }
+        }
+        // Render favourite videos
+        if (favContainer) {
+            if (favs.length) {
+                let html = '<h2 style="margin-top:1.5rem;margin-bottom:0.5rem;">Favorites</h2><ul style="list-style:none;padding:0;">';
+                favs.forEach((f, idx) => {
+                    const title = (f.title || f.id).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    html += `<li style="margin:0.3rem 0;"><a href="watch.html?videoId=${f.id}" style="color:#61dafb;">${title}</a> <button onclick="removeFav(${idx})" style="margin-left:0.5rem;background:#333;border:1px solid #444;color:#fff;border-radius:3px;padding:0 0.3rem;cursor:pointer;">×</button></li>`;
+                });
+                html += '</ul>';
+                favContainer.innerHTML = html;
+            } else {
+                favContainer.innerHTML = '';
+            }
+        }
+    }
+
+    function saveSearch() {
+        const input = document.getElementById('search-input');
+        const q = input ? input.value.trim() : '';
+        if (!q) return;
+        let searches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+        if (!searches.includes(q)) {
+            searches.push(q);
+            localStorage.setItem('savedSearches', JSON.stringify(searches));
+        }
+        loadSaved();
+    }
+
+    function removeSearch(index) {
+        let searches = JSON.parse(localStorage.getItem('savedSearches') || '[]');
+        searches.splice(index, 1);
+        localStorage.setItem('savedSearches', JSON.stringify(searches));
+        loadSaved();
+    }
+
+    function removeFav(index) {
+        let favs = JSON.parse(localStorage.getItem('favorites') || '[]');
+        favs.splice(index, 1);
+        localStorage.setItem('favorites', JSON.stringify(favs));
+        loadSaved();
+    }
+
+    // Initialize saved lists on page load
+    document.addEventListener('DOMContentLoaded', loadSaved);
     </script>
 </body>
 </html>
