@@ -86,7 +86,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 0.5rem 1rem;
-            background: #111;
+            background: #1a1a1a;
             color: #fff;
         }
         .top-bar .title {
@@ -181,12 +181,29 @@
                 setBackground(0);
             });
     }
-    function updateLocation() {
-        const lat = parseFloat(document.getElementById('lat').value);
-        const lon = parseFloat(document.getElementById('lon').value);
-        if (!isNaN(lat) && !isNaN(lon)) {
-            fetchWeather(lat, lon);
-        }
+    // Update weather background based on ZIP code input
+    function updateByZip() {
+        const zipInput = document.getElementById('zip');
+        const zip = zipInput ? zipInput.value.trim() : '';
+        if (!zip) return;
+        fetch(`https://api.zippopotam.us/us/${zip}`)
+            .then(res => {
+                if (!res.ok) throw new Error('ZIP lookup failed');
+                return res.json();
+            })
+            .then(data => {
+                if (data && data.places && data.places.length > 0) {
+                    const place = data.places[0];
+                    const lat = parseFloat(place.latitude);
+                    const lon = parseFloat(place.longitude);
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        fetchWeather(lat, lon);
+                    }
+                }
+            })
+            .catch(() => {
+                alert('Unable to fetch location for that ZIP code.');
+            });
     }
     function initWeather() {
         // Try to use the browser's geolocation to determine the user's location
