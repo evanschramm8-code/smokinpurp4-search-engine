@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>smokinpurp4's search engine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 1rem;
+            background: #000;
+            color: #fff;
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+        #search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        #search-container input[type="text"] {
+            width: 60%;
+            padding: 0.5rem;
+            font-size: 1rem;
+            background: #111;
+            color: #fff;
+            border: 1px solid #444;
+        }
+        #search-container button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            margin-left: 0.5rem;
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            cursor: pointer;
+        }
+        #results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .video-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .video-card img {
+            width: 100%;
+            height: auto;
+        }
+        .video-card .info {
+            padding: 0.5rem;
+        }
+        .video-card .info h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .video-card .info p {
+            margin: 0.25rem 0 0;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <h1>smokinpurp4's search engine</h1>
+    <form id="search-container" action="https://yewtu.be/search" method="GET" target="_blank">
+        <input type="text" name="q" placeholder="Search for videos" />
+        <button type="submit">Search</button>
+    </form>
+    <p style="text-align:center;margin-top:1rem;">Or explore <a href="https://yewtu.be/feed/trending" target="_blank" rel="noopener" style="color:#61dafb;">Trending videos</a></p>
+    <div class="footer">Powered by smokinpurp4 – open‑source YouTube front‑end</div>
+</body>
+</html>

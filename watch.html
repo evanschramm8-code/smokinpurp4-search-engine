@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>smokinpurp4's search engine - Watch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+        }
+        .header {
+            padding: 1rem;
+            background: #111;
+            display: flex;
+            align-items: center;
+        }
+        .header a {
+            color: #61dafb;
+            text-decoration: none;
+            margin-right: 1rem;
+            font-size: 1rem;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            margin: 1rem;
+        }
+        iframe {
+            width: 100%;
+            max-width: 960px;
+            height: 540px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="index.html">← Back to Search</a>
+        <span id="video-title"></span>
+    </div>
+    <div class="container">
+        <iframe id="player" allowfullscreen></iframe>
+    </div>
+    <script>
+        function getQueryParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+        function decodeHtml(html) {
+            const txt = document.createElement('textarea');
+            txt.innerHTML = html;
+            return txt.value;
+        }
+        async function loadVideo() {
+            const videoId = getQueryParam('videoId');
+            if (!videoId) {
+                document.getElementById('video-title').textContent = 'Invalid video';
+                return;
+            }
+            // Set iframe source to Invidious embed
+            const player = document.getElementById('player');
+            player.src = `https://yewtu.be/embed/${videoId}?autoplay=1`;
+            // Fetch some metadata for the title
+            try {
+                const resp = await fetch(`https://yewtu.be/api/v1/videos/${videoId}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    document.getElementById('video-title').textContent = data.title;
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        loadVideo();
+    </script>
+</body>
+</html>
